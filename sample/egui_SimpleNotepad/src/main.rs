@@ -42,10 +42,35 @@ impl eframe::App for MyApp {
                                     .show();
                                 match dialog {
                                     MessageDialogResult::Yes => {
+                                        if self.filePath.is_empty() {
+                                            // 存在しないパスの場合は、ファイル保存ダイアログを開く
+                                            if let Some(path) = rfd::FileDialog::new()
+                                                .add_filter("テキストファイル", &["txt"])
+                                                .add_filter("全てのファイル", &["*"])
+                                                .save_file() {
+                                                // 保存の処理
+                                                self.filePath = path;
+                                            }
+                                        }
+
                                         // 上書き保存
+                                        match std::fs::write(self.filePath.to_string_lossy().into_owned(), self.text.to_string())  {
+                                            Ok(_) => {
+                                                self.edited = false;
+                                                ui.ctx().send_viewport_cmd(egui::ViewportCommand::Title(self.filePath.to_string_lossy().into_owned()));
+                                            }
+                                            Err(e) => {
+                                                rfd::MessageDialog::new()
+                                                    .set_title("エラー")
+                                                    .set_description(format!("エラーが発生しました：{}", e))
+                                                    .set_level(rfd::MessageLevel::Error)
+                                                    .set_buttons(rfd::MessageButtons::Ok)
+                                                    .show();
+                                            }
+                                        }
                                     }
                                     MessageDialogResult::No => {
-                                        ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
+                                        self.text.clear();
                                     }
                                     _ => {}
                                 }
@@ -81,6 +106,33 @@ impl eframe::App for MyApp {
                         if (ui.button("上書き保存").clicked()) {
                             if (self.edited) {
                                 // 上書きの処理
+                                if self.filePath.is_empty() {
+                                    // 存在しないパスの場合は、ファイル保存ダイアログを開く
+                                    if let Some(path) = rfd::FileDialog::new()
+                                        .add_filter("テキストファイル", &["txt"])
+                                        .add_filter("全てのファイル", &["*"])
+                                        .save_file() {
+                                        // 保存の処理
+                                        self.filePath = path;
+                                    }
+                                }
+
+                                // 上書き保存
+                                match std::fs::write(self.filePath.to_string_lossy().into_owned(), self.text.to_string())  {
+                                    Ok(_) => {
+                                        self.edited = false;
+                                        ui.ctx().send_viewport_cmd(egui::ViewportCommand::Title(self.filePath.to_string_lossy().into_owned()));
+                                    }
+                                    Err(e) => {
+                                        rfd::MessageDialog::new()
+                                            .set_title("エラー")
+                                            .set_description(format!("エラーが発生しました：{}", e))
+                                            .set_level(rfd::MessageLevel::Error)
+                                            .set_buttons(rfd::MessageButtons::Ok)
+                                            .show();
+                                    }
+                                }
+
                             }
                             else {
                                 if let Some(path) = rfd::FileDialog::new()
