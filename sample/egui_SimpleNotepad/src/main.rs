@@ -79,7 +79,17 @@ impl eframe::App for MyApp {
                             }
                         }
                         if (ui.button("上書き保存").clicked()) {
-                            println!("aa")
+                            if (self.edited) {
+                                // 上書きの処理
+                            }
+                            else {
+                                if let Some(path) = rfd::FileDialog::new()
+                                    .add_filter("テキストファイル", &["txt"])
+                                    .add_filter("全てのファイル", &["*"])
+                                    .save_file() {
+                                    // 保存の処理
+                                }
+                            }
                         }
                         if (ui.button("終了").clicked()) {
                             if (self.edited) {
