@@ -33,7 +33,26 @@ impl eframe::App for MyApp {
                 egui::MenuBar::new().ui(ui, |ui| {
                     ui.menu_button("ファイル", |ui| {
                         if (ui.button("新規").clicked()) {
-                            println!("aa")
+                            if (self.edited) {
+                                let dialog = rfd::MessageDialog::new()
+                                    .set_title("保存")
+                                    .set_description("保存されていない変更があります。保存しますか？")
+                                    .set_level(MessageLevel::Info)
+                                    .set_buttons(MessageButtons::YesNo)
+                                    .show();
+                                match dialog {
+                                    MessageDialogResult::Yes => {
+                                        // 上書き保存
+                                    }
+                                    MessageDialogResult::No => {
+                                        ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            else {
+                                self.text.clear();
+                            }
                         }
                         if (ui.button("開く").clicked()) {
                             println!("aa");
