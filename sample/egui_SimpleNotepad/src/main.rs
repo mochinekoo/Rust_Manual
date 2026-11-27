@@ -1,5 +1,8 @@
+use std::error::Error;
+use std::path::PathBuf;
 use eframe::egui;
-use egui::Color32;
+use egui::{Color32, Response};
+use rfd::{MessageButtons, MessageDialogResult, MessageLevel};
 
 fn main() -> eframe::Result<()> {
     return eframe::run_native(
@@ -31,7 +34,28 @@ impl eframe::App for MyApp {
                             println!("aa")
                         }
                         if (ui.button("開く").clicked()) {
-                            println!("aa")
+                            println!("aa");
+                            if let Some(path) = rfd::FileDialog::new()
+                                .add_filter("テキストファイル", &["txt"])
+                                .add_filter("全てのファイル", &["*"])
+                                .pick_file()  {
+                                // println!("{:?}", path)
+                                match std::fs::read_to_string(&path) {
+                                    Ok(text) => {
+                                        self.text = text;
+                                        self.filePath = path;
+                                        ui.ctx().send_viewport_cmd(egui::ViewportCommand::Title(self.filePath.to_string_lossy().into_owned()));
+                                    },
+                                    Err(e) => {
+                                        rfd::MessageDialog::new()
+                                            .set_title("エラー")
+                                            .set_description(format!("エラーが発生しました：{}", e))
+                                            .set_level(rfd::MessageLevel::Error)
+                                            .set_buttons(rfd::MessageButtons::Ok)
+                                            .show();
+                                    }
+                                }
+                            }
                         }
                         if (ui.button("上書き保存").clicked()) {
                             println!("aa")
