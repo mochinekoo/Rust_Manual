@@ -14,6 +14,8 @@ fn main() -> eframe::Result<()> {
 #[derive(Default)]
 struct MyApp {
     text: String,
+    filePath: PathBuf,
+    edited: bool
 }
 
 impl MyApp {
@@ -61,7 +63,26 @@ impl eframe::App for MyApp {
                             println!("aa")
                         }
                         if (ui.button("終了").clicked()) {
-                            ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
+                            if (self.edited) {
+                                let dialog = rfd::MessageDialog::new()
+                                    .set_title("保存")
+                                    .set_description("保存されていない変更があります。保存しますか？")
+                                    .set_level(MessageLevel::Info)
+                                    .set_buttons(MessageButtons::YesNo)
+                                    .show();
+                                match dialog {
+                                    MessageDialogResult::Yes => {
+                                        // 上書き保存
+                                    }
+                                    MessageDialogResult::No => {
+                                        ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            else {
+                                ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
+                            }
                         }
                     });
 
@@ -72,11 +93,16 @@ impl eframe::App for MyApp {
                     });
                 });
 
-                ui.add_sized(
+                let textEdit: Response = ui.add_sized(
                     ui.available_size(),
                     egui::TextEdit::multiline(&mut self.text)
                         .desired_width(f32::INFINITY)
                 );
+                if (textEdit.changed()) {
+                    //println!("changed!");
+                    self.edited = true;
+                    ui.ctx().send_viewport_cmd(egui::ViewportCommand::Title(self.filePath.to_string_lossy().into_owned() + "(*)"));
+                }
             });
     }
 }
