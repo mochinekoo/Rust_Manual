@@ -6,9 +6,11 @@ use rfd::{MessageButtons, MessageDialogResult, MessageLevel};
 
 fn main() -> eframe::Result<()> {
     return eframe::run_native(
-        "あぷり",
+        "シンプルメモ帳",
         eframe::NativeOptions::default(),
-        Box::new(|_| Ok(Box::new(MyApp::default()))),
+        Box::new(|_| {
+            return Ok(Box::new(MyApp::default()))
+        }),
     )
 }
 #[derive(Default)]
@@ -20,6 +22,15 @@ struct MyApp {
 
 impl MyApp {
     pub const COLOR_WHITE: Color32 = Color32::from_rgb(240, 240, 240);
+
+    pub fn appErrorDialog(error: &mut dyn Error) {
+        rfd::MessageDialog::new()
+            .set_title("エラー")
+            .set_description(format!("エラーが発生しました：{}", error))
+            .set_level(rfd::MessageLevel::Error)
+            .set_buttons(rfd::MessageButtons::Ok)
+            .show();
+    }
 
     pub fn save(&mut self, ui: &mut egui::Ui) {
         if self.filePath.is_empty() {
@@ -70,6 +81,7 @@ impl eframe::App for MyApp {
                                 match dialog {
                                     MessageDialogResult::Yes => {
                                         Self::save(self, ui);
+                                        self.text.clear();
                                     }
                                     MessageDialogResult::No => {
                                         self.text.clear();
@@ -80,9 +92,9 @@ impl eframe::App for MyApp {
                             else {
                                 self.text.clear();
                             }
+                            ui.ctx().send_viewport_cmd(egui::ViewportCommand::Title("メモ帳".to_string()));
                         }
                         if (ui.button("開く").clicked()) {
-                            println!("aa");
                             if let Some(path) = rfd::FileDialog::new()
                                 .add_filter("テキストファイル", &["txt"])
                                 .add_filter("全てのファイル", &["*"])
@@ -94,13 +106,8 @@ impl eframe::App for MyApp {
                                         self.filePath = path;
                                         ui.ctx().send_viewport_cmd(egui::ViewportCommand::Title(self.filePath.to_string_lossy().into_owned()));
                                     },
-                                    Err(e) => {
-                                        rfd::MessageDialog::new()
-                                            .set_title("エラー")
-                                            .set_description(format!("エラーが発生しました：{}", e))
-                                            .set_level(rfd::MessageLevel::Error)
-                                            .set_buttons(rfd::MessageButtons::Ok)
-                                            .show();
+                                    Err(mut e) => {
+                                        Self::appErrorDialog(&mut e);
                                     }
                                 }
                             }
