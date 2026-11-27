@@ -5,12 +5,12 @@ fn main() -> eframe::Result<()> {
     return eframe::run_native(
         "あぷり",
         eframe::NativeOptions::default(),
-        Box::new(|_| Ok(Box::new(MyApp {}))),
+        Box::new(|_| Ok(Box::new(MyApp::default()))),
     )
 }
-
+#[derive(Default)]
 struct MyApp {
-
+    text: String,
 }
 
 impl MyApp {
@@ -47,6 +47,12 @@ impl eframe::App for MyApp {
                         }
                     });
                 });
+
+                ui.add_sized(
+                    ui.available_size(),
+                    egui::TextEdit::multiline(&mut self.text)
+                        .desired_width(f32::INFINITY)
+                );
             });
     }
 }
